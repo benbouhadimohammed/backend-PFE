@@ -18,21 +18,18 @@ const register = async (req, res) => {
     }
 
     
+   
     const hashedPassword = await bcrypt.hash(password, 10);
 
     
     const user = await createUser(nom, email, hashedPassword);
 
     
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+   
 
     res.status(201).json({
       message: "User registered",
-      token,
+      
       user,
     });
   } catch (error) {
@@ -47,37 +44,39 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    
+    // 1. Validation
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password required' });
+    }
+
+    // 2. Trouver l'utilisateur
     const user = await findUserByEmail(email);
-    console.log("user found");
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    
+      return res.status(400).json({ message: 'User not found' });
     }
 
+    // 3. Vérifier le mot de passe
     const isMatch = await bcrypt.compare(password, user.mot_de_passe);
-    console.log("password match");
     if (!isMatch) {
-      return res.status(400).json({ message: "Wrong password" });
-      
+      return res.status(400).json({ message: 'Wrong password' });
     }
 
-    
+    // 4. Générer le token
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: '1d' }
     );
 
-    
-    res.json({ token });
+    res.status(200).json({
+      user: { id: user.id, nom: user.nom, email: user.email },
+      token,
+    });
+
   } catch (error) {
-    
-     console.error('Login error:', error) 
-  res.status(500).json({ message: error.message })
+    console.error('Login error:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 
-
-
-module.exports = { login, register };
+module.exports = { register, login };

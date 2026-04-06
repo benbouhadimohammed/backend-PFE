@@ -8,21 +8,17 @@ const findUserByEmail = async (email) => {
   );
   return result.rows[0];
 };
-const createUser = async () => {
+const createUser = async (nom, email, hashedPassword) => {
   try {
-    const nom = "test";
-    const email = "test@gmail.com";
-    const password = "123456";
-    const hashedPassword = await bcrypt.hash(password, 10);
+    
 
-
-    await pool.query(
-      "INSERT INTO users (nom, email, mot_de_passe) VALUES ($1, $2, $3)",
+    const result = await pool.query(
+      "INSERT INTO users (nom, email, mot_de_passe) VALUES ($1, $2, $3) returning *",
       [nom, email, hashedPassword]
     );
-
-    console.log("✅ User created successfully");
-    process.exit();
+    return result.rows[0];
+  
+    
   } catch (error) {
     console.error("❌ Error:", error);
   }
