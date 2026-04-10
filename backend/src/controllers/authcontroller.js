@@ -2,6 +2,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { findUserByEmail, createUser } = require("../models/usermodel");
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
 
 const register = async (req, res) => {
   try {
@@ -10,6 +13,19 @@ const register = async (req, res) => {
     
     if (!nom || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
+    }
+    if (nom.trim().length < 2) {
+      return res.status(400).json({ message: "Name must be at least 2 characters" });
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    if (!PASSWORD_REGEX.test(password)) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters, include uppercase, lowercase and a number",
+      });
     }
 
     const existingUser = await findUserByEmail(email);
@@ -44,24 +60,27 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validation
+   
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password required' });
     }
+     if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
 
-    // 2. Trouver l'utilisateur
+   
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    // 3. Vérifier le mot de passe
+    
     const isMatch = await bcrypt.compare(password, user.mot_de_passe);
     if (!isMatch) {
       return res.status(400).json({ message: 'Wrong password' });
     }
 
-    // 4. Générer le token
+    
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -79,4 +98,54 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+   
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
+
+    
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    
+    const isMatch = await bcrypt.compare(password, user.mot_de_passe);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Wrong password" });
+    }
+
+   
+    if (user.rolee !== "admin") {
+      return res.status(403).json({ message: "Access denied (not admin)" });
+    }
+
+   
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.rolee 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.json({
+      message: "Admin login successful",
+      token
+    });
+
+  } catch (error) {
+    console.error("Admin login error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { register, login, adminLogin };

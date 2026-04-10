@@ -14,10 +14,33 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // stock info user
-    next(); // passer à la suite
+    req.user = decoded; 
+    next(); 
   } catch {
     res.status(401).json({ message: "Invalid token" });
   }
 };
+
+const adminMiddleware = (req, res, next) => {
+  try {
+
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied (admin only)" });
+    }
+
+    
+    next();
+
+  } catch (error) {
+    console.error("Admin middleware error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = adminMiddleware;
 module.exports = authMiddleware;

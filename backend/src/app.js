@@ -1,22 +1,19 @@
 require("dotenv").config();
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT= process.env.JWT_SECRET;
 const pool = require("./config/db");
-const authRoutes = require("./routes/authroutes");
-const authMiddleware = require("./middleware/authmiddleware");
+const authroutes = require("./routes/authroutes");
+const adminroutes = require("./routes/adminroutes");
 app.use(express.json());
 
 
-app.use("/api/auth", authRoutes);
 
-app.get("/protected", authMiddleware, (req, res) => {
-  res.json({
-    message: "Access granted",
-    user: req.user
-  });
-});
+app.use("/api", adminroutes);
+app.use("/api/auth", authroutes);
+
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
