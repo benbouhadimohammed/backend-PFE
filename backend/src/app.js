@@ -9,10 +9,14 @@ const authroutes = require("./routes/authroutes");
 const adminroutes = require("./routes/adminroutes");
 app.use(express.json());
 
+app.use(cors({
+  origin: 'http://localhost:5174', // ← port de ton frontend
+  credentials: true,
+}));
 
-
-app.use("/api", adminroutes);
 app.use("/api/auth", authroutes);
+app.use("/api/admin", adminroutes);
+
 
 
 app.get('/', (req, res) => {

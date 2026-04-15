@@ -4,7 +4,7 @@ const getStats = async (req, res) => {
   try {
     const users    = await pool.query('SELECT COUNT(*) FROM users')
     const annonces = await pool.query('SELECT COUNT(*) FROM annonces')
-    const posts    = await pool.query('SELECT COUNT(*) FROM forum')
+    const posts    = await pool.query('SELECT COUNT(*) FROM forum_post')
 
     res.json({
       users:    parseInt(users.rows[0].count),
@@ -64,7 +64,7 @@ const deleteAnnonce = async (req, res) => {
 const getAllPosts = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM forum '
+      'SELECT * FROM forum_post '
     )
     res.json(result.rows)
   } catch (error) {
@@ -75,7 +75,7 @@ const getAllPosts = async (req, res) => {
 const deletePost = async (req, res) => {
   try {
     const { id } = req.params
-    await pool.query('DELETE FROM forum WHERE id_forum = $1', [id])
+    await pool.query('DELETE FROM forum_post WHERE id_forum = $1', [id])
     res.json({ message: 'Post deleted' })
   } catch (error) {
     res.status(500).json({ message: error.message })
