@@ -8,12 +8,16 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const register = async (req, res) => {
   try {
-    const { nom, email, password } = req.body;
+    const { nom, email, password, type_user } = req.body;
 
     
-    if (!nom || !email || !password) {
+    if (!nom || !email || !password || !type_user) {
       return res.status(400).json({ message: "All fields required" });
     }
+    if (!['client', 'prestataire'].includes(type_user)) {
+      return res.status(400).json({ message: 'type_user doit être client ou prestataire' })
+    }
+
     if (nom.trim().length < 2) {
       return res.status(400).json({ message: "Name must be at least 2 characters" });
     }
@@ -82,13 +86,14 @@ const login = async (req, res) => {
 
     
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role, type_user: user.type_user },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
 
     res.status(200).json({
-      user: { id: user.id, nom: user.nom, email: user.email },
+      
+      user: { id: user.id, nom: user.nom, email: user.email, role: user.role  },
       token,
     });
 
@@ -98,54 +103,9 @@ const login = async (req, res) => {
   }
 };
 
-const adminLogin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+
 
    
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
-    }
-
     
-    const user = await findUserByEmail(email);
 
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    
-    const isMatch = await bcrypt.compare(password, user.mot_de_passe);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Wrong password" });
-    }
-
-   
-    if (user.rolee !== "admin") {
-      return res.status(403).json({ message: "Access denied (not admin)" });
-    }
-
-   
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.rolee 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    res.json({
-      message: "Admin login successful",
-      token
-    });
-
-  } catch (error) {
-    console.error("Admin login error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-module.exports = { register, login, adminLogin };
+module.exports = { register, login};

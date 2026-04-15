@@ -42,5 +42,16 @@ const adminMiddleware = (req, res, next) => {
   }
 };
 
+const prestataireMiddleware = (req, res, next) => {
+  if (!req.user || req.user.type_user !== 'prestataire') {
+    return res.status(403).json({ 
+      message: 'Seuls les prestataires peuvent créer des annonces' 
+    })
+  }
+  next()
+}
+
+module.exports = prestataireMiddleware
+
 module.exports = adminMiddleware;
 module.exports = authMiddleware;
