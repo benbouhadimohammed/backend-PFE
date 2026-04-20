@@ -6,12 +6,11 @@ const PORT = process.env.PORT || 3000;
 const JWT= process.env.JWT_SECRET;
 const pool = require("./config/db");
 const authroutes = require("./routes/authroutes");
-const adminroutes = require("./routes/adminroutes");
+
 app.use(express.json());
 
+app.use(cors());
 
-
-app.use("/api", adminroutes);
 app.use("/api/auth", authroutes);
 
 
