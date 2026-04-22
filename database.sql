@@ -5,7 +5,7 @@ email VARCHAR(100) UNIQUE NOT NULL,
 mot_de_passe VARCHAR(255) NOT NULL,
 type_user VARCHAR(20) DEFAULT 'client',
 role VARCHAR(20) DEFAULT 'user',
-date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE annonces (
   id_annonce SERIAL PRIMARY KEY,
