@@ -8,7 +8,7 @@ const pool = require('../config/db');
 
 async function createSujetDb(titre, contenu, auteurId) {
   const result = await pool.query(
-    `INSERT INTO sujets_forum (titre, contenu, auteur_id)
+    `INSERT INTO forum_post (titre, contenu, auteur_id)
      VALUES ($1, $2, $3)
      RETURNING *`,
     [titre, contenu, auteurId]
@@ -18,8 +18,8 @@ async function createSujetDb(titre, contenu, auteurId) {
 
 async function getAllSujetsDb(ouvertsUniquement = false) {
   const sql = ouvertsUniquement
-    ? `SELECT * FROM sujets_forum WHERE est_ferme = FALSE ORDER BY date_creation DESC`
-    : `SELECT * FROM sujets_forum ORDER BY date_creation DESC`;
+    ? `SELECT * FROM forum_post WHERE est_ferme = FALSE ORDER BY date_creation DESC`
+    : `SELECT * FROM forum_post ORDER BY date_creation DESC`;
   const result = await pool.query(sql);
   return result.rows;
 }
@@ -27,7 +27,7 @@ async function getAllSujetsDb(ouvertsUniquement = false) {
 async function searchSujetsDb(motCle) {
   // ILIKE = insensible à la casse côté PostgreSQL
   const result = await pool.query(
-    `SELECT * FROM sujets_forum WHERE titre ILIKE $1 ORDER BY date_creation DESC`,
+    `SELECT * FROM forum_post WHERE titre ILIKE $1 ORDER BY date_creation DESC`,
     [`%${motCle}%`]
   );
   return result.rows;
@@ -35,7 +35,7 @@ async function searchSujetsDb(motCle) {
 
 async function getSujetByIdDb(id) {
   const result = await pool.query(
-    `SELECT * FROM sujets_forum WHERE id = $1`,
+    `SELECT * FROM forum_post WHERE id = $1`,
     [id]
   );
   return result.rows[0] ?? null;
@@ -46,7 +46,7 @@ async function getSujetByIdDb(id) {
  */
 async function closeSujetDb(id) {
   const result = await pool.query(
-    `UPDATE sujets_forum
+    `UPDATE forum_post
      SET est_ferme = TRUE
      WHERE id = $1 AND est_ferme = FALSE
      RETURNING *`,
@@ -57,7 +57,7 @@ async function closeSujetDb(id) {
 
 async function deleteSujetDb(id) {
   // ON DELETE CASCADE dans le schéma supprime les commentaires liés
-  await pool.query(`DELETE FROM sujets_forum WHERE id = $1`, [id]);
+  await pool.query(`DELETE FROM forum_post WHERE id = $1`, [id]);
 }
 
 // ============================================================
@@ -66,7 +66,7 @@ async function deleteSujetDb(id) {
 
 async function addCommentaireDb(sujetId, contenu, auteurId) {
   const result = await pool.query(
-    `INSERT INTO commentaires_forum (sujet_id, contenu, auteur_id)
+    `INSERT INTO forum_commentaires (sujet_id, contenu, auteur_id)
      VALUES ($1, $2, $3)
      RETURNING *`,
     [sujetId, contenu, auteurId]
@@ -76,7 +76,7 @@ async function addCommentaireDb(sujetId, contenu, auteurId) {
 
 async function getCommentairesBysujetDb(sujetId) {
   const result = await pool.query(
-    `SELECT * FROM commentaires_forum
+    `SELECT * FROM forum_commentaires
      WHERE sujet_id = $1
      ORDER BY date_envoi ASC`,
     [sujetId]
@@ -86,7 +86,7 @@ async function getCommentairesBysujetDb(sujetId) {
 
 async function getCommentaireByIdDb(commentaireId) {
   const result = await pool.query(
-    `SELECT * FROM commentaires_forum WHERE id = $1`,
+    `SELECT * FROM forum_commentaires WHERE id = $1`,
     [commentaireId]
   );
   return result.rows[0] ?? null;
@@ -98,7 +98,7 @@ async function getCommentaireByIdDb(commentaireId) {
  */
 async function softDeleteCommentaireDb(commentaireId) {
   const result = await pool.query(
-    `UPDATE commentaires_forum
+    `UPDATE forum_commentaires
      SET est_supprime = TRUE,
          contenu      = '[commentaire supprimé]'
      WHERE id = $1 AND est_supprime = FALSE
