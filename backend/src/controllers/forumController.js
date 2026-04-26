@@ -9,6 +9,7 @@ const {
   closeSujetDb,
   deleteSujetDb,
   addCommentaireDb,
+  getCommentairesByPostDb,
   getCommentaireByIdDb,
   softDeleteCommentaireDb,
 } = require('../models/forumModel');
@@ -22,8 +23,8 @@ function parseId(valeur) {
 }
 
 function erreurStatut(message) {
-  if (message.includes('introuvable'))                          return 404;
-  if (message.includes('autorisé') || message.includes('admin')) return 403;
+  if (message.includes('introuvable'))                              return 404;
+  if (message.includes('autorisé') || message.includes('admin'))   return 403;
   if (message.includes('déjà') || message.includes('fermé') ||
       message.includes('obligatoire') || message.includes('vide')) return 400;
   return 500;
@@ -58,8 +59,8 @@ const creerSujet = async (req, res) => {
     const { titre, contenu } = req.body;
     validerTexte(titre, 'titre');
     validerTexte(contenu, 'contenu');
-    const auteurId = await getUserId(req.user.email);
-    const sujet = await createSujetDb(titre.trim(), contenu.trim(), auteurId);
+    const id_user = await getUserId(req.user.email);
+    const sujet = await createSujetDb(titre.trim(), contenu.trim(), id_user);
     res.status(201).json(sujet);
   } catch (error) {
     res.status(erreurStatut(error.message)).json({ message: error.message });
@@ -91,7 +92,8 @@ const rechercherSujets = async (req, res) => {
 const obtenirSujet = async (req, res) => {
   try {
     const sujet = await obtenirSujetOuErreur(parseId(req.params.id));
-    res.status(200).json(sujet);
+    const commentaires = await getCommentairesByPostDb(sujet.id_forum);
+    res.status(200).json({ sujet, commentaires });
   } catch (error) {
     res.status(erreurStatut(error.message)).json({ message: error.message });
   }
@@ -127,8 +129,8 @@ const ajouterCommentaire = async (req, res) => {
     validerTexte(req.body.contenu, 'contenu');
     const sujet = await obtenirSujetOuErreur(parseId(req.params.id));
     if (sujet.est_ferme) throw new Error("Impossible d'ajouter un commentaire : le sujet est fermé.");
-    const auteurId = await getUserId(req.user.email);
-    const commentaire = await addCommentaireDb(parseId(req.params.id), req.body.contenu.trim(), auteurId);
+    const id_user = await getUserId(req.user.email);
+    const commentaire = await addCommentaireDb(sujet.id_forum, req.body.contenu.trim(), id_user);
     res.status(201).json(commentaire);
   } catch (error) {
     res.status(erreurStatut(error.message)).json({ message: error.message });
@@ -140,11 +142,11 @@ const supprimerCommentaire = async (req, res) => {
     await obtenirSujetOuErreur(parseId(req.params.sujetId));
     const commentaire = await getCommentaireByIdDb(parseId(req.params.commentaireId));
     if (!commentaire) throw new Error(`Commentaire ${req.params.commentaireId} introuvable.`);
-    if (commentaire.sujet_id !== parseId(req.params.sujetId)) {
+    if (commentaire.id_post !== parseId(req.params.sujetId)) {
       throw new Error("Ce commentaire n'appartient pas à ce sujet.");
     }
-    const id = await getUserId(req.user.email);
-    if (id !== commentaire.auteur_id && !estAdmin(req.user)) {
+    const id_user = await getUserId(req.user.email);
+    if (id_user !== commentaire.id_user && !estAdmin(req.user)) {
       throw new Error("Vous n'êtes pas autorisé à supprimer ce commentaire.");
     }
     const result = await softDeleteCommentaireDb(parseId(req.params.commentaireId));

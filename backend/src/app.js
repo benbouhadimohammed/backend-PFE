@@ -4,10 +4,10 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT= process.env.JWT_SECRET;
-const pool = require("../config/db");
-const authroutes = require("../routes/authroutes");
-const adminroutes = require("../routes/adminroutes");
-const forumRoutes = require("../routes/forumRoutes");
+const pool = require("./config/db");
+const authroutes = require("./routes/authroutes");
+const adminroutes = require("./routes/adminroutes");
+const forumRoutes = require("./routes/forumRoutes");
 app.use(express.json());
 
 

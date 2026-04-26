@@ -14,17 +14,15 @@ const {
   supprimerCommentaire,
 } = require('../controllers/forumController');
 
-// Toutes les routes du forum exigent d'être connecté.
-// Le contrôle admin (fermer/supprimer sujet) est géré dans le service.
 router.use(authMiddleware);
 
 // ── Sujets ────────────────────────────────────────────────────
-router.get('/',               listerSujets);       // GET  /api/forum
-router.get('/recherche',      rechercherSujets);   // GET  /api/forum/recherche?q=...
-router.get('/:id',            obtenirSujet);       // GET  /api/forum/:id
-router.post('/',              creerSujet);         // POST /api/forum
-router.patch('/:id/fermer',   fermerSujet);        // PATCH /api/forum/:id/fermer  (admin)
-router.delete('/:id',         supprimerSujet);     // DELETE /api/forum/:id        (admin)
+router.get('/',             listerSujets);
+router.get('/recherche',    rechercherSujets);
+router.get('/:id',          obtenirSujet);
+router.post('/',            creerSujet);
+router.patch('/:id/fermer', fermerSujet);
+router.delete('/:id',       supprimerSujet);
 
 // ── Commentaires ─────────────────────────────────────────────
 router.post('/:id/commentaires',                            ajouterCommentaire);   // POST   /api/forum/:id/commentaires
